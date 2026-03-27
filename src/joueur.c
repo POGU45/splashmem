@@ -5,8 +5,6 @@
 
 static int coordonnee_boucle(int valeur, int taille_max)
 {
-    // Gère l'effet "Pac-Man" :
-    // si on sort d'un côté, on réapparaît de l'autre.
     while (valeur < 0)
     {
         valeur += taille_max;
@@ -22,17 +20,20 @@ static int coordonnee_boucle(int valeur, int taille_max)
 
 void initialiser_joueurs(Joueur joueurs[], int nombre_joueurs)
 {
-    int i;
+    int indice_joueur;
+    int espacement;
 
-    for (i = 0; i < nombre_joueurs; i++)
+    espacement = LARGEUR_PLATEAU / nombre_joueurs;
+
+    for (indice_joueur = 0; indice_joueur < nombre_joueurs; indice_joueur++)
     {
-        joueurs[i].x = 10 + i;
-        joueurs[i].y = 10;
-        joueurs[i].credit = CREDIT_INITIAL;
-        joueurs[i].identifiant = i;
-        joueurs[i].cases_marquees = 0;
-        joueurs[i].bibliotheque = NULL;
-        joueurs[i].obtenir_action = NULL;
+        joueurs[indice_joueur].x = indice_joueur * espacement;
+        joueurs[indice_joueur].y = HAUTEUR_PLATEAU / 2;
+        joueurs[indice_joueur].credit = CREDIT_INITIAL;
+        joueurs[indice_joueur].identifiant = indice_joueur;
+        joueurs[indice_joueur].cases_marquees = 0;
+        joueurs[indice_joueur].bibliotheque = NULL;
+        joueurs[indice_joueur].obtenir_action = NULL;
     }
 }
 

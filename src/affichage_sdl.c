@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <SDL2/SDL.h>
+#include <SDL2/SDL_ttf.h>
 #include "../include/affichage_sdl.h"
 
 #define TAILLE_CASE 10
@@ -8,16 +9,58 @@
 
 static SDL_Window *fenetre = NULL;
 static SDL_Renderer *rendu = NULL;
+static TTF_Font *police = NULL;
 static int programme_actif = 1;
 
 /*
- * Initialise SDL, la fenêtre et le moteur de rendu.
+ * Dessine un texte dans la fenêtre SDL.
+ */
+static void dessiner_texte(const char *texte, int position_x, int position_y, Uint8 rouge, Uint8 vert, Uint8 bleu)
+{
+    SDL_Color couleur = {rouge, vert, bleu, 255};
+    SDL_Surface *surface_texte;
+    SDL_Texture *texture_texte;
+    SDL_Rect rectangle_texte;
+
+    surface_texte = TTF_RenderText_Blended(police, texte, couleur);
+    if (surface_texte == NULL)
+    {
+        return;
+    }
+
+    texture_texte = SDL_CreateTextureFromSurface(rendu, surface_texte);
+    if (texture_texte == NULL)
+    {
+        SDL_FreeSurface(surface_texte);
+        return;
+    }
+
+    rectangle_texte.x = position_x;
+    rectangle_texte.y = position_y;
+    rectangle_texte.w = surface_texte->w;
+    rectangle_texte.h = surface_texte->h;
+
+    SDL_RenderCopy(rendu, texture_texte, NULL, &rectangle_texte);
+
+    SDL_DestroyTexture(texture_texte);
+    SDL_FreeSurface(surface_texte);
+}
+
+/*
+ * Initialise SDL et SDL_ttf.
  */
 int initialiser_sdl(void)
 {
     if (SDL_Init(SDL_INIT_VIDEO) != 0)
     {
         fprintf(stderr, "Erreur SDL_Init : %s\n", SDL_GetError());
+        return 0;
+    }
+
+    if (TTF_Init() != 0)
+    {
+        fprintf(stderr, "Erreur TTF_Init : %s\n", TTF_GetError());
+        SDL_Quit();
         return 0;
     }
 
@@ -33,6 +76,7 @@ int initialiser_sdl(void)
     if (fenetre == NULL)
     {
         fprintf(stderr, "Erreur SDL_CreateWindow : %s\n", SDL_GetError());
+        TTF_Quit();
         SDL_Quit();
         return 0;
     }
@@ -42,10 +86,23 @@ int initialiser_sdl(void)
     {
         fprintf(stderr, "Erreur SDL_CreateRenderer : %s\n", SDL_GetError());
         SDL_DestroyWindow(fenetre);
+        TTF_Quit();
         SDL_Quit();
         return 0;
     }
 
+    police = TTF_OpenFont("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 16);
+    if (police == NULL)
+    {
+        fprintf(stderr, "Erreur TTF_OpenFont : %s\n", TTF_GetError());
+        SDL_DestroyRenderer(rendu);
+        SDL_DestroyWindow(fenetre);
+        TTF_Quit();
+        SDL_Quit();
+        return 0;
+    }
+
+    programme_actif = 1;
     return 1;
 }
 
@@ -54,6 +111,12 @@ int initialiser_sdl(void)
  */
 void fermer_sdl(void)
 {
+    if (police != NULL)
+    {
+        TTF_CloseFont(police);
+        police = NULL;
+    }
+
     if (rendu != NULL)
     {
         SDL_DestroyRenderer(rendu);
@@ -66,11 +129,12 @@ void fermer_sdl(void)
         fenetre = NULL;
     }
 
+    TTF_Quit();
     SDL_Quit();
 }
 
 /*
- * Indique si la fenêtre est toujours ouverte.
+ * Retourne 1 si la fenêtre est encore ouverte.
  */
 int fenetre_sdl_est_ouverte(void)
 {
@@ -78,7 +142,7 @@ int fenetre_sdl_est_ouverte(void)
 }
 
 /*
- * Gère les événements SDL, notamment la fermeture de fenêtre.
+ * Gère les événements SDL.
  */
 void gerer_evenements_sdl(void)
 {
@@ -94,49 +158,79 @@ void gerer_evenements_sdl(void)
 }
 
 /*
- * Affiche le plateau et les joueurs.
+ * Affiche le plateau, les joueurs, les scores et le classement.
  */
 void afficher_plateau_sdl(Plateau *plateau, Joueur joueurs[], int nombre_joueurs)
 {
     int ligne;
     int colonne;
     int indice_joueur;
-    SDL_Rect rectangle;
+    int indice_classement;
+    int indice_comparaison;
+    int temporaire;
 
-    /* Fond noir */
-    SDL_SetRenderDrawColor(rendu, 0, 0, 0, 255);
+    int classement[NOMBRE_MAX_JOUEURS];
+
+    SDL_Rect rectangle_case;
+    SDL_Rect rectangle_joueur;
+    SDL_Rect fond_hud;
+
+    char texte_hud[128];
+
+    /* Préparation du classement */
+    for (indice_joueur = 0; indice_joueur < nombre_joueurs; indice_joueur++)
+    {
+        classement[indice_joueur] = indice_joueur;
+    }
+
+    for (indice_classement = 0; indice_classement < nombre_joueurs - 1; indice_classement++)
+    {
+        for (indice_comparaison = indice_classement + 1; indice_comparaison < nombre_joueurs; indice_comparaison++)
+        {
+            if (joueurs[classement[indice_comparaison]].cases_marquees >
+                joueurs[classement[indice_classement]].cases_marquees)
+            {
+                temporaire = classement[indice_classement];
+                classement[indice_classement] = classement[indice_comparaison];
+                classement[indice_comparaison] = temporaire;
+            }
+        }
+    }
+
+    /* Fond général */
+    SDL_SetRenderDrawColor(rendu, 20, 20, 20, 255);
     SDL_RenderClear(rendu);
 
-    /* Dessin des cases possedees */
+    /* Dessin des cases possédées */
     for (ligne = 0; ligne < HAUTEUR_PLATEAU; ligne++)
     {
         for (colonne = 0; colonne < LARGEUR_PLATEAU; colonne++)
         {
-            rectangle.x = colonne * TAILLE_CASE;
-            rectangle.y = ligne * TAILLE_CASE;
-            rectangle.w = TAILLE_CASE;
-            rectangle.h = TAILLE_CASE;
+            rectangle_case.x = colonne * TAILLE_CASE;
+            rectangle_case.y = ligne * TAILLE_CASE;
+            rectangle_case.w = TAILLE_CASE;
+            rectangle_case.h = TAILLE_CASE;
 
             switch (plateau->proprietaire[ligne][colonne])
             {
                 case 0:
-                    SDL_SetRenderDrawColor(rendu, 255, 0, 0, 255);
-                    SDL_RenderFillRect(rendu, &rectangle);
+                    SDL_SetRenderDrawColor(rendu, 220, 40, 40, 255);
+                    SDL_RenderFillRect(rendu, &rectangle_case);
                     break;
 
                 case 1:
-                    SDL_SetRenderDrawColor(rendu, 0, 255, 0, 255);
-                    SDL_RenderFillRect(rendu, &rectangle);
+                    SDL_SetRenderDrawColor(rendu, 40, 220, 40, 255);
+                    SDL_RenderFillRect(rendu, &rectangle_case);
                     break;
 
                 case 2:
-                    SDL_SetRenderDrawColor(rendu, 0, 0, 255, 255);
-                    SDL_RenderFillRect(rendu, &rectangle);
+                    SDL_SetRenderDrawColor(rendu, 60, 120, 255, 255);
+                    SDL_RenderFillRect(rendu, &rectangle_case);
                     break;
 
                 case 3:
-                    SDL_SetRenderDrawColor(rendu, 255, 255, 0, 255);
-                    SDL_RenderFillRect(rendu, &rectangle);
+                    SDL_SetRenderDrawColor(rendu, 240, 220, 60, 255);
+                    SDL_RenderFillRect(rendu, &rectangle_case);
                     break;
 
                 default:
@@ -145,59 +239,122 @@ void afficher_plateau_sdl(Plateau *plateau, Joueur joueurs[], int nombre_joueurs
         }
     }
 
-    /* Dessin de la grille */
-    SDL_SetRenderDrawColor(rendu, 40, 40, 40, 255);
+    /* Grille */
+    SDL_SetRenderDrawColor(rendu, 55, 55, 55, 255);
 
     for (ligne = 0; ligne <= HAUTEUR_PLATEAU; ligne++)
     {
-        SDL_RenderDrawLine(rendu,
-                           0,
-                           ligne * TAILLE_CASE,
-                           LARGEUR_FENETRE,
-                           ligne * TAILLE_CASE);
+        SDL_RenderDrawLine(rendu, 0, ligne * TAILLE_CASE, LARGEUR_FENETRE, ligne * TAILLE_CASE);
     }
 
     for (colonne = 0; colonne <= LARGEUR_PLATEAU; colonne++)
     {
-        SDL_RenderDrawLine(rendu,
-                           colonne * TAILLE_CASE,
-                           0,
-                           colonne * TAILLE_CASE,
-                           HAUTEUR_FENETRE);
+        SDL_RenderDrawLine(rendu, colonne * TAILLE_CASE, 0, colonne * TAILLE_CASE, HAUTEUR_FENETRE);
     }
 
-    /* Dessin des joueurs */
+    /* Joueurs */
     for (indice_joueur = 0; indice_joueur < nombre_joueurs; indice_joueur++)
     {
-        rectangle.x = joueurs[indice_joueur].x * TAILLE_CASE;
-        rectangle.y = joueurs[indice_joueur].y * TAILLE_CASE;
-        rectangle.w = TAILLE_CASE;
-        rectangle.h = TAILLE_CASE;
+        rectangle_joueur.x = joueurs[indice_joueur].x * TAILLE_CASE;
+        rectangle_joueur.y = joueurs[indice_joueur].y * TAILLE_CASE;
+        rectangle_joueur.w = TAILLE_CASE;
+        rectangle_joueur.h = TAILLE_CASE;
 
         switch (indice_joueur)
         {
             case 0:
                 SDL_SetRenderDrawColor(rendu, 255, 255, 255, 255);
                 break;
-
             case 1:
-                SDL_SetRenderDrawColor(rendu, 255, 128, 255, 255);
+                SDL_SetRenderDrawColor(rendu, 255, 105, 180, 255);
                 break;
-
             case 2:
                 SDL_SetRenderDrawColor(rendu, 0, 255, 255, 255);
                 break;
-
             case 3:
-                SDL_SetRenderDrawColor(rendu, 255, 165, 0, 255);
+                SDL_SetRenderDrawColor(rendu, 255, 140, 0, 255);
                 break;
-
             default:
                 SDL_SetRenderDrawColor(rendu, 255, 255, 255, 255);
                 break;
         }
 
-        SDL_RenderFillRect(rendu, &rectangle);
+        SDL_RenderFillRect(rendu, &rectangle_joueur);
+
+        SDL_SetRenderDrawColor(rendu, 0, 0, 0, 255);
+        SDL_RenderDrawRect(rendu, &rectangle_joueur);
+    }
+
+    /* Fond du HUD */
+    SDL_SetRenderDrawBlendMode(rendu, SDL_BLENDMODE_BLEND);
+
+    fond_hud.x = 15;
+    fond_hud.y = 15;
+    fond_hud.w = 220;
+    fond_hud.h = 280;
+
+    SDL_SetRenderDrawColor(rendu, 0, 0, 0, 200);
+    SDL_RenderFillRect(rendu, &fond_hud);
+
+    SDL_SetRenderDrawColor(rendu, 255, 255, 255, 255);
+    SDL_RenderDrawRect(rendu, &fond_hud);
+
+    /* Titre du HUD */
+    dessiner_texte("Scores", 20, 15, 255, 255, 255);
+
+    /* Scores individuels */
+    if (nombre_joueurs > 0)
+    {
+        snprintf(texte_hud, sizeof(texte_hud), "J1 : %d", joueurs[0].cases_marquees);
+        dessiner_texte(texte_hud, 20, 40, 220, 40, 40);
+    }
+
+    if (nombre_joueurs > 1)
+    {
+        snprintf(texte_hud, sizeof(texte_hud), "J2 : %d", joueurs[1].cases_marquees);
+        dessiner_texte(texte_hud, 20, 62, 40, 220, 40);
+    }
+
+    if (nombre_joueurs > 2)
+    {
+        snprintf(texte_hud, sizeof(texte_hud), "J3 : %d", joueurs[2].cases_marquees);
+        dessiner_texte(texte_hud, 20, 84, 60, 120, 255);
+    }
+
+    if (nombre_joueurs > 3)
+    {
+        snprintf(texte_hud, sizeof(texte_hud), "J4 : %d", joueurs[3].cases_marquees);
+        dessiner_texte(texte_hud, 20, 106, 240, 220, 60);
+    }
+
+    /* Classement */
+    dessiner_texte("Classement", 20, 140, 255, 255, 255);
+
+    for (indice_classement = 0; indice_classement < nombre_joueurs; indice_classement++)
+    {
+        snprintf(
+            texte_hud,
+            sizeof(texte_hud),
+            "%d. J%d (%d)",
+            indice_classement + 1,
+            classement[indice_classement] + 1,
+            joueurs[classement[indice_classement]].cases_marquees
+        );
+
+        dessiner_texte(texte_hud, 20, 165 + indice_classement * 20, 255, 255, 255);
+    }
+
+    /* Gagnant */
+    if (nombre_joueurs > 0)
+    {
+        snprintf(
+            texte_hud,
+            sizeof(texte_hud),
+            "Gagnant : J%d",
+            classement[0] + 1
+        );
+
+        dessiner_texte(texte_hud, 20, 165 + nombre_joueurs * 20 + 10, 255, 215, 0);
     }
 
     SDL_RenderPresent(rendu);

@@ -6,7 +6,7 @@
 #define LARGEUR_PLATEAU 100
 #define HAUTEUR_PLATEAU 100
 #define NOMBRE_MAX_JOUEURS 4
-#define CREDIT_INITIAL 30
+#define CREDIT_INITIAL 500
 
 typedef char (*fonction_action_t)(void);
 
