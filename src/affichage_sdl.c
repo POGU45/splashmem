@@ -157,10 +157,51 @@ void gerer_evenements_sdl(void)
     }
 }
 
+static void dessiner_texte_centre(const char *texte, int position_y, int taille_police, Uint8 rouge, Uint8 vert, Uint8 bleu)
+{
+    TTF_Font *police_temporaire;
+    SDL_Color couleur = {rouge, vert, bleu, 255};
+    SDL_Surface *surface_texte;
+    SDL_Texture *texture_texte;
+    SDL_Rect rectangle_texte;
+
+    police_temporaire = TTF_OpenFont("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", taille_police);
+    if (police_temporaire == NULL)
+    {
+        return;
+    }
+
+    surface_texte = TTF_RenderText_Blended(police_temporaire, texte, couleur);
+    if (surface_texte == NULL)
+    {
+        TTF_CloseFont(police_temporaire);
+        return;
+    }
+
+    texture_texte = SDL_CreateTextureFromSurface(rendu, surface_texte);
+    if (texture_texte == NULL)
+    {
+        SDL_FreeSurface(surface_texte);
+        TTF_CloseFont(police_temporaire);
+        return;
+    }
+
+    rectangle_texte.w = surface_texte->w;
+    rectangle_texte.h = surface_texte->h;
+    rectangle_texte.x = (LARGEUR_FENETRE - rectangle_texte.w) / 2;
+    rectangle_texte.y = position_y;
+
+    SDL_RenderCopy(rendu, texture_texte, NULL, &rectangle_texte);
+
+    SDL_DestroyTexture(texture_texte);
+    SDL_FreeSurface(surface_texte);
+    TTF_CloseFont(police_temporaire);
+}
+
 /*
  * Affiche le plateau, les joueurs, les scores et le classement.
  */
-void afficher_plateau_sdl(Plateau *plateau, Joueur joueurs[], int nombre_joueurs)
+void afficher_plateau_sdl(Plateau *plateau, Joueur joueurs[], int nombre_joueurs, int partie_terminee)
 {
     int ligne;
     int colonne;
@@ -344,18 +385,43 @@ void afficher_plateau_sdl(Plateau *plateau, Joueur joueurs[], int nombre_joueurs
         dessiner_texte(texte_hud, 20, 165 + indice_classement * 20, 255, 255, 255);
     }
 
-    /* Gagnant */
-    if (nombre_joueurs > 0)
+    if (partie_terminee)
     {
-        snprintf(
-            texte_hud,
-            sizeof(texte_hud),
-            "Gagnant : J%d",
-            classement[0] + 1
-        );
+        dessiner_texte("PARTIE TERMINEE", 20, 255, 255, 0, 0);
+    }
+    else
+    {
+        dessiner_texte("PARTIE EN COURS", 20, 255, 0, 255, 0);
+    }
 
-        dessiner_texte(texte_hud, 20, 165 + nombre_joueurs * 20 + 10, 255, 215, 0);
+    if (partie_terminee && nombre_joueurs > 0)
+    {
+    SDL_Rect fond_central;
+    char texte_gagnant[64];
+
+    /* fond semi-transparent centré */
+    SDL_SetRenderDrawBlendMode(rendu, SDL_BLENDMODE_BLEND);
+
+    fond_central.w = 420;
+    fond_central.h = 110;
+    fond_central.x = (LARGEUR_FENETRE - fond_central.w) / 2;
+    fond_central.y = (HAUTEUR_FENETRE - fond_central.h) / 2;
+
+    SDL_SetRenderDrawColor(rendu, 0, 0, 0, 170);
+    SDL_RenderFillRect(rendu, &fond_central);
+
+    SDL_SetRenderDrawColor(rendu, 255, 215, 0, 255);
+    SDL_RenderDrawRect(rendu, &fond_central);
+
+    snprintf(texte_gagnant, sizeof(texte_gagnant), "JOUEUR %d GAGNE !", classement[0] + 1);
+
+    /* ombre légère */
+    dessiner_texte_centre(texte_gagnant, fond_central.y + 24, 40, 0, 0, 0);
+
+    /* texte principal */
+    dessiner_texte_centre(texte_gagnant, fond_central.y + 20, 40, 255, 215, 0);
     }
 
     SDL_RenderPresent(rendu);
 }
+

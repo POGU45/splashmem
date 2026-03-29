@@ -1,4 +1,3 @@
-#include <stdio.h>
 #include "../include/plateau.h"
 
 /*
@@ -22,165 +21,37 @@ void initialiser_plateau(Plateau *plateau)
 /*
  * Marque la case actuelle du joueur.
  *
- * Cas possibles :
- * - la case lui appartient déjà : aucun changement
- * - la case est libre : le joueur gagne 1 case
+ * Cas gérés :
+ * - la case lui appartient déjà → aucun changement
+ * - la case est libre → +1 case
  * - la case appartient à un autre joueur :
- *     l'ancien propriétaire perd 1 case
- *     le joueur courant gagne 1 case
- *     la propriété est mise à jour
+ *      → l'ancien propriétaire perd 1 case
+ *      → le joueur courant gagne 1 case
  */
 void marquer_case(Plateau *plateau, Joueur joueurs[], Joueur *joueur)
 {
     int ancien_proprietaire;
-    int position_x;
-    int position_y;
+    int x;
+    int y;
 
-    position_x = joueur->x;
-    position_y = joueur->y;
+    x = joueur->x;
+    y = joueur->y;
 
-    ancien_proprietaire = plateau->proprietaire[position_y][position_x];
+    ancien_proprietaire = plateau->proprietaire[y][x];
 
+    /* Case déjà possédée par le joueur */
     if (ancien_proprietaire == joueur->identifiant)
     {
         return;
     }
 
+    /* Retirer la case à l'ancien propriétaire */
     if (ancien_proprietaire != -1)
     {
         joueurs[ancien_proprietaire].cases_marquees--;
     }
 
-    plateau->proprietaire[position_y][position_x] = joueur->identifiant;
+    /* Attribuer la case au joueur courant */
+    plateau->proprietaire[y][x] = joueur->identifiant;
     joueur->cases_marquees++;
-}
-
-/*
- * Affiche la totalité du plateau.
- *
- * Symboles :
- * - '.' : case libre
- * - '1', '2', '3', '4' : case possédée
- * - 'A', 'B', 'C', 'D' : position actuelle des joueurs
- */
-void afficher_plateau_entier(Plateau *plateau, Joueur joueurs[], int nombre_joueurs)
-{
-    int ligne;
-    int colonne;
-    int indice_joueur;
-    int joueur_trouve;
-    int proprietaire_case;
-
-    printf("\n=== PLATEAU COMPLET %dx%d ===\n", LARGEUR_PLATEAU, HAUTEUR_PLATEAU);
-    printf("A/B/C/D : position actuelle des joueurs\n");
-    printf("1/2/3/4 : cases possedees\n");
-    printf(". : case libre\n\n");
-
-    printf("     ");
-    for (colonne = 0; colonne < LARGEUR_PLATEAU; colonne++)
-    {
-        printf("%2d ", colonne);
-    }
-    printf("\n");
-
-    for (ligne = 0; ligne < HAUTEUR_PLATEAU; ligne++)
-    {
-        printf("%3d  ", ligne);
-
-        for (colonne = 0; colonne < LARGEUR_PLATEAU; colonne++)
-        {
-            joueur_trouve = 0;
-
-            for (indice_joueur = 0; indice_joueur < nombre_joueurs; indice_joueur++)
-            {
-                if (joueurs[indice_joueur].x == colonne && joueurs[indice_joueur].y == ligne)
-                {
-                    printf("%2c ", 'A' + indice_joueur);
-                    joueur_trouve = 1;
-                    break;
-                }
-            }
-
-            if (joueur_trouve)
-            {
-                continue;
-            }
-
-            proprietaire_case = plateau->proprietaire[ligne][colonne];
-
-            if (proprietaire_case == -1)
-            {
-                printf("%2c ", '.');
-            }
-            else
-            {
-                printf("%2d ", proprietaire_case + 1);
-            }
-        }
-
-        printf("\n");
-    }
-
-    printf("\n");
-}
-
-void afficher_plateau_reduit(Plateau *plateau, Joueur joueurs[], int nombre_joueurs, int largeur_affichee, int hauteur_affichee)
-{
-    int ligne;
-    int colonne;
-    int indice_joueur;
-    int joueur_trouve;
-    int proprietaire_case;
-
-    printf("\n=== APERCU DU PLATEAU ===\n");
-    printf("A/B/C/D : position actuelle des joueurs\n");
-    printf("1/2/3/4 : cases possedees\n");
-    printf(". : case libre\n\n");
-
-    printf("    ");
-    for (colonne = 0; colonne < largeur_affichee; colonne++)
-    {
-        printf("%2d ", colonne);
-    }
-    printf("\n");
-
-    for (ligne = 0; ligne < hauteur_affichee; ligne++)
-    {
-        printf("%2d  ", ligne);
-
-        for (colonne = 0; colonne < largeur_affichee; colonne++)
-        {
-            joueur_trouve = 0;
-
-            for (indice_joueur = 0; indice_joueur < nombre_joueurs; indice_joueur++)
-            {
-                if (joueurs[indice_joueur].x == colonne && joueurs[indice_joueur].y == ligne)
-                {
-                    printf("%2c ", 'A' + indice_joueur);
-                    joueur_trouve = 1;
-                    break;
-                }
-            }
-
-            if (joueur_trouve)
-            {
-                continue;
-            }
-
-            proprietaire_case = plateau->proprietaire[ligne][colonne];
-
-            if (proprietaire_case == -1)
-            {
-                printf("%2c ", '.');
-            }
-            else
-            {
-                printf("%2d ", proprietaire_case + 1);
-            }
-        }
-
-        printf("\n");
-    }
-
-    printf("\n");
 }

@@ -1,17 +1,11 @@
 #include <stdio.h>
-#include <stdlib.h>
 #include <SDL2/SDL.h>
+
 #include "../include/affichage_sdl.h"
 #include "../include/types.h"
 #include "../include/plateau.h"
 #include "../include/joueur.h"
 #include "../include/chargement.h"
-
-#define AFFICHAGE_PLATEAU_COMPLET 1
-#define AFFICHAGE_DEBUG 0
-#define AFFICHAGE_PLATEAU 0
-#define LARGEUR_AFFICHEE 20
-#define HAUTEUR_AFFICHEE 12
 
 static int tous_les_joueurs_sont_epuises(Joueur joueurs[], int nombre_joueurs)
 {
@@ -28,30 +22,13 @@ static int tous_les_joueurs_sont_epuises(Joueur joueurs[], int nombre_joueurs)
     return 1;
 }
 
-static void afficher_resultats(Joueur joueurs[], int nombre_joueurs)
-{
-    int indice_joueur;
-
-    printf("\n=== RESULTATS FINAUX ===\n");
-
-    for (indice_joueur = 0; indice_joueur < nombre_joueurs; indice_joueur++)
-    {
-        printf("Joueur %d : %d cases marquees | credit restant : %d | position finale : (%d,%d)\n",
-               joueurs[indice_joueur].identifiant + 1,
-               joueurs[indice_joueur].cases_marquees,
-               joueurs[indice_joueur].credit,
-               joueurs[indice_joueur].x,
-               joueurs[indice_joueur].y);
-    }
-}
-
 int main(int argc, char *argv[])
 {
     Plateau plateau;
     Joueur joueurs[NOMBRE_MAX_JOUEURS];
     int nombre_joueurs;
     int indice_joueur;
-    //int numero_tour;
+    int partie_terminee;
     char action;
     int cout;
 
@@ -62,18 +39,10 @@ int main(int argc, char *argv[])
     }
 
     nombre_joueurs = argc - 1;
-    //numero_tour = 1;
+    partie_terminee = 0;
 
     initialiser_plateau(&plateau);
     initialiser_joueurs(joueurs, nombre_joueurs);
-
-    if (!initialiser_sdl())
-    {
-        return 1;
-    }
-
-afficher_plateau_sdl(&plateau, joueurs, nombre_joueurs);
-SDL_Delay(500);
 
     for (indice_joueur = 0; indice_joueur < nombre_joueurs; indice_joueur++)
     {
@@ -86,54 +55,61 @@ SDL_Delay(500);
         marquer_case(&plateau, joueurs, &joueurs[indice_joueur]);
     }
 
-    if (AFFICHAGE_PLATEAU_COMPLET)
+    if (!initialiser_sdl())
     {
-    afficher_plateau_entier(&plateau, joueurs, nombre_joueurs);
-    }
-
-    if (AFFICHAGE_PLATEAU)
-    {
-        printf("Tour initial\n");
-        afficher_plateau_reduit(&plateau, joueurs, nombre_joueurs, LARGEUR_AFFICHEE, HAUTEUR_AFFICHEE);
-    }
-
-    while (!tous_les_joueurs_sont_epuises(joueurs, nombre_joueurs) && fenetre_sdl_est_ouverte())
-{
-    gerer_evenements_sdl();
-
-    for (indice_joueur = 0; indice_joueur < nombre_joueurs; indice_joueur++)
-    {
-        if (joueurs[indice_joueur].credit <= 0)
+        for (indice_joueur = 0; indice_joueur < nombre_joueurs; indice_joueur++)
         {
-            continue;
+            liberer_joueur(&joueurs[indice_joueur]);
         }
 
-        action = joueurs[indice_joueur].obtenir_action();
-        cout = cout_action(action);
-
-        if (joueurs[indice_joueur].credit < cout)
-        {
-            joueurs[indice_joueur].credit = 0;
-            continue;
-        }
-
-        joueurs[indice_joueur].credit -= cout;
-        appliquer_action(&joueurs[indice_joueur], action);
-        marquer_case(&plateau, joueurs, &joueurs[indice_joueur]);
+        return 1;
     }
 
-    afficher_plateau_sdl(&plateau, joueurs, nombre_joueurs);
-    SDL_Delay(300);
-}
+    while (fenetre_sdl_est_ouverte())
+    {
+        gerer_evenements_sdl();
 
-    afficher_resultats(joueurs, nombre_joueurs);
+        if (!partie_terminee)
+        {
+            if (tous_les_joueurs_sont_epuises(joueurs, nombre_joueurs))
+            {
+                partie_terminee = 1;
+            }
+            else
+            {
+                for (indice_joueur = 0; indice_joueur < nombre_joueurs; indice_joueur++)
+                {
+                    if (joueurs[indice_joueur].credit <= 0)
+                    {
+                        continue;
+                    }
+
+                    action = joueurs[indice_joueur].obtenir_action();
+                    cout = cout_action(action);
+
+                    if (joueurs[indice_joueur].credit < cout)
+                    {
+                        joueurs[indice_joueur].credit = 0;
+                        continue;
+                    }
+
+                    joueurs[indice_joueur].credit -= cout;
+                    appliquer_action(&joueurs[indice_joueur], action);
+                    marquer_case(&plateau, joueurs, &joueurs[indice_joueur]);
+                }
+            }
+        }
+
+        afficher_plateau_sdl(&plateau, joueurs, nombre_joueurs, partie_terminee);
+        SDL_Delay(100);
+    }
 
     for (indice_joueur = 0; indice_joueur < nombre_joueurs; indice_joueur++)
     {
         liberer_joueur(&joueurs[indice_joueur]);
     }
 
-    return 0;
     fermer_sdl();
-}
 
+    return 0;
+}

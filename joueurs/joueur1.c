@@ -1,43 +1,91 @@
 #include "../include/actions.h"
 
+/*
+ * Joueur 1 :
+ * balayage horizontal en serpentin.
+ *
+ * Objectif :
+ * couvrir une grande surface sans rester bloqué
+ * dans une seule ligne droite.
+ *
+ * Fonctionnement :
+ * - grande phase vers la droite
+ * - petite descente
+ * - grande phase vers la gauche
+ * - petite descente
+ * - répétition
+ *
+ * Quelques dash sont insérés pour accélérer l'expansion.
+ */
+
 char get_action(void)
 {
     static int phase = 0;
-    static int compteur = 0;
-    static int longueur = 4;
-    static int dir = 0;
+    static int compteur_pas = 0;
+    static int compteur_global = 0;
 
-    compteur++;
+    compteur_global++;
+    compteur_pas++;
 
-    /* Phase 1 : spirale */
-    if (phase == 0)
+    switch (phase)
     {
-        switch (dir)
-        {
-            case 0: if (compteur < longueur) return ACTION_MOVE_R; break;
-            case 1: if (compteur < longueur) return ACTION_MOVE_D; break;
-            case 2: if (compteur < longueur) return ACTION_MOVE_L; break;
-            case 3: if (compteur < longueur) return ACTION_MOVE_U; break;
-        }
+        /* Balayage vers la droite */
+        case 0:
+            if (compteur_pas % 12 == 0)
+            {
+                if (compteur_pas >= 24)
+                {
+                    compteur_pas = 0;
+                    phase = 1;
+                }
+                return ACTION_DASH_R;
+            }
 
-        compteur = 0;
-        dir = (dir + 1) % 4;
+            if (compteur_pas >= 24)
+            {
+                compteur_pas = 0;
+                phase = 1;
+            }
+            return ACTION_MOVE_R;
 
-        if (dir % 2 == 0)
-            longueur++;
+        /* Petite descente */
+        case 1:
+            if (compteur_pas >= 3)
+            {
+                compteur_pas = 0;
+                phase = 2;
+            }
+            return ACTION_MOVE_D;
 
-        if (longueur > 10)
-            phase = 1;
+        /* Balayage vers la gauche */
+        case 2:
+            if (compteur_pas % 12 == 0)
+            {
+                if (compteur_pas >= 24)
+                {
+                    compteur_pas = 0;
+                    phase = 3;
+                }
+                return ACTION_DASH_L;
+            }
+
+            if (compteur_pas >= 24)
+            {
+                compteur_pas = 0;
+                phase = 3;
+            }
+            return ACTION_MOVE_L;
+
+        /* Petite descente */
+        case 3:
+            if (compteur_pas >= 3)
+            {
+                compteur_pas = 0;
+                phase = 0;
+            }
+            return ACTION_MOVE_D;
+
+        default:
+            return ACTION_STILL;
     }
-
-    /* Phase 2 : dash horizontal */
-    if (phase == 1)
-    {
-        if (compteur % 5 == 0)
-            return ACTION_DASH_R;
-
-        return ACTION_MOVE_R;
-    }
-
-    return ACTION_MOVE_R;
 }
