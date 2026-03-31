@@ -1,7 +1,6 @@
 #include "../include/joueur.h"
 #include "../include/actions.h"
-
-#include <stdlib.h>
+#include <stddef.h>
 
 static int coordonnee_boucle(int valeur, int taille_max)
 {
@@ -37,7 +36,7 @@ void initialiser_joueurs(Joueur joueurs[], int nombre_joueurs)
     }
 }
 
-int cout_action(char action)
+int cout_action(Action action)
 {
     switch (action)
     {
@@ -60,15 +59,16 @@ int cout_action(char action)
         case ACTION_TELEPORT_D:
             return 2;
 
+        case ACTION_BOMB:
+            return 5;
+
         default:
             return 1;
     }
 }
 
-void appliquer_action(Joueur *joueur, char action)
+void appliquer_action(Joueur *joueur, Action action)
 {
-    int deplacement = 0;
-
     switch (action)
     {
         case ACTION_MOVE_L:
@@ -88,45 +88,38 @@ void appliquer_action(Joueur *joueur, char action)
             break;
 
         case ACTION_DASH_L:
-            deplacement = 8;
-            joueur->x = coordonnee_boucle(joueur->x - deplacement, LARGEUR_PLATEAU);
+            joueur->x = coordonnee_boucle(joueur->x - 8, LARGEUR_PLATEAU);
             break;
 
         case ACTION_DASH_R:
-            deplacement = 8;
-            joueur->x = coordonnee_boucle(joueur->x + deplacement, LARGEUR_PLATEAU);
+            joueur->x = coordonnee_boucle(joueur->x + 8, LARGEUR_PLATEAU);
             break;
 
         case ACTION_DASH_U:
-            deplacement = 8;
-            joueur->y = coordonnee_boucle(joueur->y - deplacement, HAUTEUR_PLATEAU);
+            joueur->y = coordonnee_boucle(joueur->y - 8, HAUTEUR_PLATEAU);
             break;
 
         case ACTION_DASH_D:
-            deplacement = 8;
-            joueur->y = coordonnee_boucle(joueur->y + deplacement, HAUTEUR_PLATEAU);
+            joueur->y = coordonnee_boucle(joueur->y + 8, HAUTEUR_PLATEAU);
             break;
 
         case ACTION_TELEPORT_L:
-            deplacement = 8;
-            joueur->x = coordonnee_boucle(joueur->x - deplacement, LARGEUR_PLATEAU);
+            joueur->x = coordonnee_boucle(joueur->x - 8, LARGEUR_PLATEAU);
             break;
 
         case ACTION_TELEPORT_R:
-            deplacement = 8;
-            joueur->x = coordonnee_boucle(joueur->x + deplacement, LARGEUR_PLATEAU);
+            joueur->x = coordonnee_boucle(joueur->x + 8, LARGEUR_PLATEAU);
             break;
 
         case ACTION_TELEPORT_U:
-            deplacement = 8;
-            joueur->y = coordonnee_boucle(joueur->y - deplacement, HAUTEUR_PLATEAU);
+            joueur->y = coordonnee_boucle(joueur->y - 8, HAUTEUR_PLATEAU);
             break;
 
         case ACTION_TELEPORT_D:
-            deplacement = 8;
-            joueur->y = coordonnee_boucle(joueur->y + deplacement, HAUTEUR_PLATEAU);
+            joueur->y = coordonnee_boucle(joueur->y + 8, HAUTEUR_PLATEAU);
             break;
 
+        case ACTION_BOMB:
         case ACTION_STILL:
         default:
             break;

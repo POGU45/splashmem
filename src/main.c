@@ -3,9 +3,11 @@
 
 #include "../include/affichage_sdl.h"
 #include "../include/types.h"
+#include "../include/actions.h"
 #include "../include/plateau.h"
 #include "../include/joueur.h"
 #include "../include/chargement.h"
+#include "../include/bombe.h"
 
 static int tous_les_joueurs_sont_epuises(Joueur joueurs[], int nombre_joueurs)
 {
@@ -26,10 +28,12 @@ int main(int argc, char *argv[])
 {
     Plateau plateau;
     Joueur joueurs[NOMBRE_MAX_JOUEURS];
+    Bombe bombes[NOMBRE_MAX_BOMBES];
+
     int nombre_joueurs;
     int indice_joueur;
     int partie_terminee;
-    char action;
+    Action action;
     int cout;
 
     if (argc < 2 || argc > 5)
@@ -43,6 +47,7 @@ int main(int argc, char *argv[])
 
     initialiser_plateau(&plateau);
     initialiser_joueurs(joueurs, nombre_joueurs);
+    initialiser_bombes(bombes, NOMBRE_MAX_BOMBES);
 
     for (indice_joueur = 0; indice_joueur < nombre_joueurs; indice_joueur++)
     {
@@ -94,9 +99,20 @@ int main(int argc, char *argv[])
                     }
 
                     joueurs[indice_joueur].credit -= cout;
-                    appliquer_action(&joueurs[indice_joueur], action);
-                    marquer_case(&plateau, joueurs, &joueurs[indice_joueur]);
+
+                    if (action == ACTION_BOMB)
+                    {
+                        poser_bombe(bombes, NOMBRE_MAX_BOMBES, &joueurs[indice_joueur]);
+                        marquer_case(&plateau, joueurs, &joueurs[indice_joueur]);
+                    }
+                    else
+                    {
+                        appliquer_action(&joueurs[indice_joueur], action);
+                        marquer_case(&plateau, joueurs, &joueurs[indice_joueur]);
+                    }
                 }
+
+                mettre_a_jour_bombes(bombes, NOMBRE_MAX_BOMBES, &plateau, joueurs);
             }
         }
 

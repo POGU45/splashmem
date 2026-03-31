@@ -16,7 +16,7 @@
  * Cela permet de couvrir une zone de plus en plus large.
  */
 
-char get_action(void)
+Action get_action(void)
 {
     static int phase = 0;
     static int compteur_pas = 0;

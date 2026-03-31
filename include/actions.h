@@ -1,25 +1,30 @@
 #ifndef ACTIONS_H
 #define ACTIONS_H
 
-// Déplacements simples
-#define ACTION_MOVE_L      1
-#define ACTION_MOVE_R      2
-#define ACTION_MOVE_U      3
-#define ACTION_MOVE_D      4
+/*
+ * Enumération des actions possibles pour un joueur.
+ * L'ordre est IMPORTANT car certaines valeurs peuvent être utilisées implicitement.
+ */
+typedef enum action
+{
+    ACTION_STILL,       // 0
 
-// Dash : avance de 8 cases
-#define ACTION_DASH_L      5
-#define ACTION_DASH_R      6
-#define ACTION_DASH_U      7
-#define ACTION_DASH_D      8
+    ACTION_MOVE_L,      // 1
+    ACTION_MOVE_R,      // 2
+    ACTION_MOVE_U,      // 3
+    ACTION_MOVE_D,      // 4
 
-// Téléportation de 8 cases
-#define ACTION_TELEPORT_L  9
-#define ACTION_TELEPORT_R  10
-#define ACTION_TELEPORT_U  11
-#define ACTION_TELEPORT_D  12
+    ACTION_DASH_L,      // 5
+    ACTION_DASH_R,      // 6
+    ACTION_DASH_U,      // 7
+    ACTION_DASH_D,      // 8
 
-// Ne rien faire
-#define ACTION_STILL       13
+    ACTION_TELEPORT_L,  // 9
+    ACTION_TELEPORT_R,  // 10
+    ACTION_TELEPORT_U,  // 11
+    ACTION_TELEPORT_D,  // 12
+
+    ACTION_BOMB         // 13
+} Action;
 
 #endif
