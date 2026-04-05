@@ -33,39 +33,12 @@ void initialiser_joueurs(Joueur joueurs[], int nombre_joueurs)
         joueurs[indice_joueur].cases_marquees = 0;
         joueurs[indice_joueur].bibliotheque = NULL;
         joueurs[indice_joueur].obtenir_action = NULL;
+        joueurs[indice_joueur].nombre_actions_historique = 0;
+        joueurs[indice_joueur].fork_actif = 0;
+        joueurs[indice_joueur].tours_fork_restants = 0;
     }
 }
 
-int cout_action(Action action)
-{
-    switch (action)
-    {
-        case ACTION_MOVE_L:
-        case ACTION_MOVE_R:
-        case ACTION_MOVE_U:
-        case ACTION_MOVE_D:
-        case ACTION_STILL:
-            return 1;
-
-        case ACTION_DASH_L:
-        case ACTION_DASH_R:
-        case ACTION_DASH_U:
-        case ACTION_DASH_D:
-            return 10;
-
-        case ACTION_TELEPORT_L:
-        case ACTION_TELEPORT_R:
-        case ACTION_TELEPORT_U:
-        case ACTION_TELEPORT_D:
-            return 2;
-
-        case ACTION_BOMB:
-            return 5;
-
-        default:
-            return 1;
-    }
-}
 
 void appliquer_action(Joueur *joueur, Action action)
 {
@@ -124,4 +97,51 @@ void appliquer_action(Joueur *joueur, Action action)
         default:
             break;
     }
+}
+int cout_action_base(Action action)
+{
+    switch (action)
+    {
+        case ACTION_MOVE_L:
+        case ACTION_MOVE_R:
+        case ACTION_MOVE_U:
+        case ACTION_MOVE_D:
+        case ACTION_STILL:
+            return 1;
+
+        case ACTION_DASH_L:
+        case ACTION_DASH_R:
+        case ACTION_DASH_U:
+        case ACTION_DASH_D:
+            return 10;
+
+        case ACTION_TELEPORT_L:
+        case ACTION_TELEPORT_R:
+        case ACTION_TELEPORT_U:
+        case ACTION_TELEPORT_D:
+            return 2;
+
+        case ACTION_BOMB:
+            return 5;
+
+        case ACTION_FORK:
+            return 8;
+
+        default:
+            return 1;
+    }
+}
+
+int cout_action_joueur(Joueur *joueur, Action action)
+{
+    int cout;
+
+    cout = cout_action_base(action);
+
+    if (joueur->fork_actif)
+    {
+        cout *= 2;
+    }
+
+    return cout;
 }

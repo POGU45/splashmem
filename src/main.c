@@ -8,6 +8,7 @@
 #include "../include/joueur.h"
 #include "../include/chargement.h"
 #include "../include/bombe.h"
+#include "../include/fork.h"
 
 static int tous_les_joueurs_sont_epuises(Joueur joueurs[], int nombre_joueurs)
 {
@@ -29,6 +30,7 @@ int main(int argc, char *argv[])
     Plateau plateau;
     Joueur joueurs[NOMBRE_MAX_JOUEURS];
     Bombe bombes[NOMBRE_MAX_BOMBES];
+    Fork forks[NOMBRE_MAX_FORKS];
 
     int nombre_joueurs;
     int indice_joueur;
@@ -48,6 +50,7 @@ int main(int argc, char *argv[])
     initialiser_plateau(&plateau);
     initialiser_joueurs(joueurs, nombre_joueurs);
     initialiser_bombes(bombes, NOMBRE_MAX_BOMBES);
+    initialiser_forks(forks, NOMBRE_MAX_FORKS);
 
     for (indice_joueur = 0; indice_joueur < nombre_joueurs; indice_joueur++)
     {
@@ -90,7 +93,9 @@ int main(int argc, char *argv[])
                     }
 
                     action = joueurs[indice_joueur].obtenir_action();
-                    cout = cout_action(action);
+                    enregistrer_action_joueur(&joueurs[indice_joueur], action);
+
+                    cout = cout_action_joueur(&joueurs[indice_joueur], action);
 
                     if (joueurs[indice_joueur].credit < cout)
                     {
@@ -105,6 +110,11 @@ int main(int argc, char *argv[])
                         poser_bombe(bombes, NOMBRE_MAX_BOMBES, &joueurs[indice_joueur]);
                         marquer_case(&plateau, joueurs, &joueurs[indice_joueur]);
                     }
+                    else if (action == ACTION_FORK)
+                    {
+                        creer_fork(forks, NOMBRE_MAX_FORKS, &joueurs[indice_joueur]);
+                        marquer_case(&plateau, joueurs, &joueurs[indice_joueur]);
+                    }
                     else
                     {
                         appliquer_action(&joueurs[indice_joueur], action);
@@ -113,10 +123,11 @@ int main(int argc, char *argv[])
                 }
 
                 mettre_a_jour_bombes(bombes, NOMBRE_MAX_BOMBES, &plateau, joueurs);
+                mettre_a_jour_forks(forks, NOMBRE_MAX_FORKS, &plateau, joueurs);
             }
         }
 
-        afficher_plateau_sdl(&plateau, joueurs, nombre_joueurs, partie_terminee);
+        afficher_plateau_sdl(&plateau, joueurs, nombre_joueurs, forks, NOMBRE_MAX_FORKS, partie_terminee);
         SDL_Delay(100);
     }
 

@@ -5,7 +5,8 @@
 #include "actions.h"
 
 void initialiser_joueurs(Joueur joueurs[], int nombre_joueurs);
-int cout_action(Action action);
 void appliquer_action(Joueur *joueur, Action action);
+int cout_action_base(Action action);
+int cout_action_joueur(Joueur *joueur, Action action);
 
 #endif

@@ -9,7 +9,8 @@ SOURCES = $(DOSSIER_SRC)/main.c \
           $(DOSSIER_SRC)/joueur.c \
           $(DOSSIER_SRC)/chargement.c \
           $(DOSSIER_SRC)/affichage_sdl.c \
-          $(DOSSIER_SRC)/bombe.c
+          $(DOSSIER_SRC)/bombe.c \
+          $(DOSSIER_SRC)/fork.c
 
 OBJETS = $(SOURCES:.c=.o)
 

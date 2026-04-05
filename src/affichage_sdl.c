@@ -201,7 +201,7 @@ static void dessiner_texte_centre(const char *texte, int position_y, int taille_
 /*
  * Affiche le plateau, les joueurs, les scores et le classement.
  */
-void afficher_plateau_sdl(Plateau *plateau, Joueur joueurs[], int nombre_joueurs, int partie_terminee)
+void afficher_plateau_sdl(Plateau *plateau, Joueur joueurs[], int nombre_joueurs, Fork forks[], int nombre_max_forks, int partie_terminee)
 {
     int ligne;
     int colonne;
@@ -324,6 +324,46 @@ void afficher_plateau_sdl(Plateau *plateau, Joueur joueurs[], int nombre_joueurs
 
         SDL_SetRenderDrawColor(rendu, 0, 0, 0, 255);
         SDL_RenderDrawRect(rendu, &rectangle_joueur);
+    }
+
+        /* Dessin des clones */
+    for (indice_joueur = 0; indice_joueur < nombre_max_forks; indice_joueur++)
+    {
+        SDL_Rect rectangle_clone;
+
+        if (!forks[indice_joueur].actif || !forks[indice_joueur].clone_demarre)
+        {
+            continue;
+        }
+
+        rectangle_clone.x = forks[indice_joueur].x_clone * TAILLE_CASE + TAILLE_CASE / 4;
+        rectangle_clone.y = forks[indice_joueur].y_clone * TAILLE_CASE + TAILLE_CASE / 4;
+        rectangle_clone.w = TAILLE_CASE / 2;
+        rectangle_clone.h = TAILLE_CASE / 2;
+
+        switch (forks[indice_joueur].proprietaire_original)
+        {
+            case 0:
+                SDL_SetRenderDrawColor(rendu, 255, 120, 120, 255);
+                break;
+            case 1:
+                SDL_SetRenderDrawColor(rendu, 120, 255, 120, 255);
+                break;
+            case 2:
+                SDL_SetRenderDrawColor(rendu, 120, 180, 255, 255);
+                break;
+            case 3:
+                SDL_SetRenderDrawColor(rendu, 255, 230, 120, 255);
+                break;
+            default:
+                SDL_SetRenderDrawColor(rendu, 255, 255, 255, 255);
+                break;
+        }
+
+        SDL_RenderFillRect(rendu, &rectangle_clone);
+
+        SDL_SetRenderDrawColor(rendu, 0, 0, 0, 255);
+        SDL_RenderDrawRect(rendu, &rectangle_clone);
     }
 
     /* Fond du HUD */
