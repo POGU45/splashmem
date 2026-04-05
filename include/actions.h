@@ -25,7 +25,9 @@ typedef enum action
     ACTION_TELEPORT_D,  // 12
 
     ACTION_BOMB,         // 13
-    ACTION_FORK          // 14
+    ACTION_FORK,          // 14
+    ACTION_CLEAN,        /* 15 */
+    ACTION_MUTE         /* 16 */
 } Action;
 
 #endif

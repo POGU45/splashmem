@@ -55,3 +55,56 @@ void marquer_case(Plateau *plateau, Joueur joueurs[], Joueur *joueur)
     plateau->proprietaire[y][x] = joueur->identifiant;
     joueur->cases_marquees++;
 }
+
+/*
+ * Nettoie une zone carrée autour d'un centre.
+ * rayon = 3 -> zone 7x7
+ *
+ * Les cases nettoyées redeviennent libres (-1).
+ * Si une case appartenait à un joueur, ce joueur perd 1 point.
+ */
+void nettoyer_zone(Plateau *plateau, Joueur joueurs[], int centre_x, int centre_y, int rayon)
+{
+    int delta_x;
+    int delta_y;
+    int x_case;
+    int y_case;
+    int ancien_proprietaire;
+
+    for (delta_y = -rayon; delta_y <= rayon; delta_y++)
+    {
+        for (delta_x = -rayon; delta_x <= rayon; delta_x++)
+        {
+            x_case = centre_x + delta_x;
+            y_case = centre_y + delta_y;
+
+            while (x_case < 0)
+            {
+                x_case += LARGEUR_PLATEAU;
+            }
+
+            while (x_case >= LARGEUR_PLATEAU)
+            {
+                x_case -= LARGEUR_PLATEAU;
+            }
+
+            while (y_case < 0)
+            {
+                y_case += HAUTEUR_PLATEAU;
+            }
+
+            while (y_case >= HAUTEUR_PLATEAU)
+            {
+                y_case -= HAUTEUR_PLATEAU;
+            }
+
+            ancien_proprietaire = plateau->proprietaire[y_case][x_case];
+
+            if (ancien_proprietaire != -1)
+            {
+                joueurs[ancien_proprietaire].cases_marquees--;
+                plateau->proprietaire[y_case][x_case] = -1;
+            }
+        }
+    }
+}

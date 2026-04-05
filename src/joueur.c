@@ -36,6 +36,8 @@ void initialiser_joueurs(Joueur joueurs[], int nombre_joueurs)
         joueurs[indice_joueur].nombre_actions_historique = 0;
         joueurs[indice_joueur].fork_actif = 0;
         joueurs[indice_joueur].tours_fork_restants = 0;
+        joueurs[indice_joueur].est_muet = 0;
+        joueurs[indice_joueur].tours_mute_restants = 0;
     }
 }
 
@@ -92,8 +94,10 @@ void appliquer_action(Joueur *joueur, Action action)
             joueur->y = coordonnee_boucle(joueur->y + 8, HAUTEUR_PLATEAU);
             break;
 
+        case ACTION_CLEAN:
         case ACTION_BOMB:
         case ACTION_STILL:
+        case ACTION_MUTE:
         default:
             break;
     }
@@ -126,6 +130,12 @@ int cout_action_base(Action action)
 
         case ACTION_FORK:
             return 8;
+
+        case ACTION_CLEAN:
+            return 40;
+
+        case ACTION_MUTE:
+            return 30;
 
         default:
             return 1;

@@ -8,7 +8,7 @@
 #define LARGEUR_PLATEAU 100
 #define HAUTEUR_PLATEAU 100
 #define NOMBRE_MAX_JOUEURS 4
-#define CREDIT_INITIAL 200
+#define CREDIT_INITIAL 900
 
 #define NOMBRE_MAX_BOMBES 100
 #define NOMBRE_MAX_FORKS 16
@@ -35,6 +35,8 @@ typedef struct
 
     int fork_actif;
     int tours_fork_restants;
+    int est_muet;
+    int tours_mute_restants;
 } Joueur;
 
 typedef struct

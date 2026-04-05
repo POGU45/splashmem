@@ -6,6 +6,11 @@ Action get_action(void)
 
     compteur++;
 
+    if (compteur % 40 == 0)
+    {
+        return ACTION_MUTE;
+    }
+
     if (compteur % 20 == 0)
     {
         return ACTION_BOMB;

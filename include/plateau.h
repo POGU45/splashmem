@@ -15,4 +15,6 @@ void initialiser_plateau(Plateau *plateau);
  */
 void marquer_case(Plateau *plateau, Joueur joueurs[], Joueur *joueur);
 
+void nettoyer_zone(Plateau *plateau, Joueur joueurs[], int centre_x, int centre_y, int rayon);
+
 #endif
